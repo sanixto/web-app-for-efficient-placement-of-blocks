@@ -2,8 +2,8 @@
   "compilerOptions": {
     "module": "ES2022",
     "allowJs": true,
-    "target": "ES2017",
+    "target": "ES2022",
     "outDir": "./public",
   },
-  "include": ["./src/**/*"]
+  "include": ["./src"]
 }

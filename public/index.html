@@ -4,6 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web application</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        #container {
+            position: relative;
+        }
+
+        .block {
+            position: absolute;
+            background-color: green;
+            border: 1px solid black;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .block > div {
+            background-color: aliceblue;
+            width: 15px;
+            height: 15px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div id="container"></div>
