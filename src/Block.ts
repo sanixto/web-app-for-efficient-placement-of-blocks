@@ -8,6 +8,7 @@ export default class Block {
     bottom: number,
     right: number,
   };
+  #backgroundColor: string;
   isSurrounded = false;
 
   constructor(width: number, height: number, initOrder: number) {
@@ -22,6 +23,16 @@ export default class Block {
 
   get height() {
     return this.#height;
+  }
+
+  get backgroundColor(): string {
+    return this.#backgroundColor;
+  }
+
+  set backgroundColor(col: string) {
+    const regexp = /#[0-9A-Fa-f]{6}/;
+    if (regexp.test(col) && col.length === 7) this.#backgroundColor = col;
+    else throw new Error('Incorrect color');
   }
 
   setPosition(left: number, right: number, top: number, bottom: number): void {
@@ -42,6 +53,7 @@ export default class Block {
     blockElem.style.height = `${this.#height}px`;
     blockElem.style.top = `${this.pos.top}px`;
     blockElem.style.left = `${this.pos.left}px`;
+    blockElem.style.backgroundColor = this.backgroundColor;
     blockElem.className = 'block';
     blockElem.innerHTML = `<div>${this.initOrder}</div>`;
     container.appendChild(blockElem);

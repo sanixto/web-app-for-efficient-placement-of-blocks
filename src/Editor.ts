@@ -57,12 +57,21 @@ class Editor {
         }
       }
 
-      // set position and draw block
+      // set up and draw block
       if (nextBlock) {
         this.#placedBlocks.push(nextBlock);
         this.#blocks = this.#blocks.filter(b => b.initOrder !== nextBlock.initOrder);
+        
         const { left, top, right, bottom } = this.#getNextPosition(nextBlock); 
         nextBlock.setPosition(left, right, top, bottom);
+
+        const nextColor = this.#getNextColor(nextBlock);
+        try {
+          nextBlock.backgroundColor = nextColor;
+        } catch(e) {
+          console.log(e)
+        }
+
         nextBlock.draw(this.#container);
         this.#startPoint.x += nextBlock.width;
       }
@@ -103,6 +112,32 @@ class Editor {
       if (block.pos.top > result.pos.top) result = block;
     }
     return result;
+  }
+
+  #getNextColor(nextBlock: Block) {
+    const identicalBLock = this.#findIdenticalPlacedBlock(nextBlock);
+    if (identicalBLock) return identicalBLock.backgroundColor;
+    else return this.#generateRandomColor();
+  }
+  
+  #findIdenticalPlacedBlock(block: Block): Block {
+    const result = this.#placedBlocks.find(placedBlock => {
+      if (this.#areIdenticalBlocks(block, placedBlock))
+        return block;
+    });
+    return result;
+  }
+
+  #areIdenticalBlocks(block1: Block, block2: Block):boolean {
+    if (block1.height === block2.height && block1.width === block2.width)
+      if (block1.initOrder !== block2.initOrder) return true;
+    return false;
+  }
+
+  #generateRandomColor(): string {
+    const randomNumber = Math.floor(Math.random() * 16777215);
+    const hexColor = randomNumber.toString(16).padStart(6, '0');
+    return `#${hexColor}`;
   }
 }
 
