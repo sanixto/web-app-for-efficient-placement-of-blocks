@@ -1,6 +1,6 @@
-import inputBLock from './intefaces/inputBlock.interface.js';
+import BlockDimension from './intefaces/InputBlock.interface.js';
 
-export default async function readBlocksFromFile(path: string): Promise<inputBLock[]> {
+export default async function readBlocksFromFile(path: string): Promise<BlockDimension[]> {
   try {
     const response: Response = await fetch(path);
     
@@ -8,8 +8,8 @@ export default async function readBlocksFromFile(path: string): Promise<inputBLo
       throw new Error(`Failed to fetch blocks. Status: ${response.status}`);
     }
 
-    const blocks: Promise<inputBLock[]> = response.json();
-    return blocks;
+    const dimensions: Promise<BlockDimension[]> = response.json();
+    return dimensions;
   } catch(e) {
     console.error(`Failed reading blocks from file ${path}:`, e);
     throw e;
