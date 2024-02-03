@@ -7,12 +7,14 @@ try {
   const inputDimensions: BlockDimension[] = await readBlocksFromFile(filename);
   editor.generateBlocks(inputDimensions);
   editor.drawBlocks();
+  editor.showFullness();
 
   window.addEventListener('resize', () => {
     editor.clearContainer();
     editor.updateContainer();
     editor.generateBlocks(inputDimensions);
     editor.drawBlocks();
+    editor.showFullness();
   });
 } catch(e) {
   console.error('Something went wrong', e);

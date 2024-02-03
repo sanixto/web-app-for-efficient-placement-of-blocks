@@ -10,8 +10,6 @@ class Editor {
   #endPoint: Point;
 
   constructor() {
-    this.#blocks = [];
-    this.#placedBlocks = [];
     this.#container = document.getElementById('container');
     this.updateContainer();
   }
@@ -29,10 +27,12 @@ class Editor {
     const viewportHeight: number = document.documentElement.clientHeight;;
     this.#container.style.width = `${viewportWidth}px`;
     this.#container.style.height = `${viewportHeight}px`;
-    this.#setRange(0, viewportHeight, viewportWidth, 0);
+    this.#blocks = [];
+    this.#placedBlocks = [];
+    this.#setRange(0, viewportHeight, viewportWidth, 0);    
   }
 
-  async drawBlocks() {
+  drawBlocks() {
     let isRunning = true;
     let curBlock: Block;
     this.#blocks.sort((a, b) => b.getArea() - a.getArea());
@@ -89,6 +89,14 @@ class Editor {
         this.#startPoint.x += nextBlock.width;
       }
     }
+  }
+
+  showFullness() {
+    const divElem =  document.createElement('div');
+    divElem.id = 'fullness';
+    this.#container.prepend(divElem);
+    const fullness = this.#calculateFullness();
+    divElem.innerText = `Fullness: ${fullness}`;
   }
 
   #getNextPosition(nextBlock: Block): { left: number, top: number, right: number, bottom: number } {
@@ -196,6 +204,50 @@ class Editor {
     const randomNumber = Math.floor(Math.random() * 16777215);
     const hexColor = randomNumber.toString(16).padStart(6, '0');
     return `#${hexColor}`;
+  }
+
+  #calculateFullness(): number {
+    let emptyArea: number = 0;
+    for (const curBlock of this.#placedBlocks) {
+      let height: number;
+      let width: number;
+
+      const rightNeighbourBlocks: Block[] = this.#findAllRightNeighbours(curBlock);
+      
+      if (rightNeighbourBlocks.length === 2) {
+        const rightTopBlock = rightNeighbourBlocks[0];
+        const rightBottomBlock = rightNeighbourBlocks[1];
+        const dist = rightBottomBlock.pos.bottom - rightTopBlock.pos.bottom - rightTopBlock.height;
+        if (dist > 0) height = dist;
+      }
+
+      if (rightNeighbourBlocks.length === 1) {
+        const rightBlock = rightNeighbourBlocks[0];
+        if (curBlock.pos.bottom < rightBlock.pos.bottom)
+          height = rightBlock.pos.bottom - curBlock.pos.bottom;
+      }
+
+      if (!height) continue;
+      
+      const rightPartitionPos = this.#findNearestRightPartitionPos(curBlock.pos.left + curBlock.width + 1, curBlock.pos.top + curBlock.height);
+      if (rightPartitionPos) {
+        width = rightPartitionPos - curBlock.pos.left - curBlock.width;
+      }
+      
+      if (height && width) emptyArea += height * width;
+    }
+    const areaOfPlacedBlocks = this.#placedBlocks.reduce((sum, block) => sum + block.getArea(), 0);
+    const fullness = 1 - (emptyArea / (emptyArea + areaOfPlacedBlocks));
+    return fullness;
+  }
+
+  #findAllRightNeighbours(curBlock: Block) {
+    return this.#placedBlocks.filter(block => {
+      if (block.pos.left === curBlock.pos.left + curBlock.width) {
+        if (block.pos.top + block.height > curBlock.pos.top && 
+          block.pos.top + block.height > curBlock.pos.top) return true;
+      } 
+    });
   }
 }
 
