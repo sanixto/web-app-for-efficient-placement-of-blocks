@@ -42,6 +42,11 @@ class Editor {
 
       // notice block if it is already surrounded by other blocks
       if (!nextBlock && curBlock) {
+        let rightNeighbour = this.#findRightNeighbourWithSameTopPosition(curBlock);
+        while (rightNeighbour) {
+          rightNeighbour.isSurrounded = true;
+          rightNeighbour = this.#findRightNeighbourWithSameTopPosition(rightNeighbour);
+        }
         curBlock.isSurrounded = true;
         curBlock = null;
       }
@@ -50,8 +55,16 @@ class Editor {
       if (!nextBlock && !curBlock) {
         curBlock = this.#findLowestBlock();
         if (curBlock) {
-          const { left, top } = curBlock.pos;
-          this.#setRange(left, top, left + curBlock.width, this.#container.clientHeight);
+          let { left: startX, top: startY } = curBlock.pos;
+          let endX = startX + curBlock.width;
+          
+          const partitions = this.#findNearestPartitionsPos(endX, startY);
+          if (partitions.leftX) startX = partitions.leftX;
+          else startX = 0;
+          if (partitions.rightX) endX = partitions.rightX;
+          else endX = this.#container.clientWidth;
+
+          this.#setRange(startX, startY, endX, this.#container.clientHeight);
         } else {
           isRunning = false;
         }
@@ -112,6 +125,51 @@ class Editor {
       if (block.pos.top > result.pos.top) result = block;
     }
     return result;
+  }
+
+  #findNearestPartitionsPos(x: number, y: number): {leftX: number, rightX: number} {
+    return {
+      leftX: this.#findNearestLeftPartitionPos(x, y),
+      rightX: this.#findNearestRightPartitionPos(x, y),
+    }
+  }
+
+  #findNearestLeftPartitionPos(x: number, y: number): number {
+    const partitions: Block[] = this.#findAllLeftPartitions(x, y);
+    const partitionPositions: number[] = partitions.map(partition => partition.pos.left + partition.width);
+    return partitionPositions.length ? Math.max(...partitionPositions) : null;
+  }
+
+  #findNearestRightPartitionPos(x: number, y: number): number {
+    const partitions: Block[] = this.#findAllRightPartitions(x, y);
+    const partitionPositions: number[] = partitions.map(partition => partition.pos.left);
+    return partitionPositions.length ? Math.min(...partitionPositions) : null;
+  }
+
+  #findAllLeftPartitions(x: number, y: number): Block[] {
+    const partitions: Block[] = this.#findAllPartitions(y);
+    return partitions.filter(partition => partition.pos.left < x);
+  }
+
+  #findAllRightPartitions(x: number, y: number): Block[] {
+    const partitions: Block[] = this.#findAllPartitions(y);
+    return partitions.filter(partition => partition.pos.left >= x);
+  }
+
+  #findAllPartitions(y: number): Block[] {
+    const partitions: Block[] = this.#placedBlocks.filter(block => {
+      if (block.pos.top < y && block.pos.top + block.height >= y)
+        return true;
+    });
+    return partitions;
+  }
+    
+  #findRightNeighbourWithSameTopPosition(block: Block): Block {
+    const neighbour = this.#placedBlocks.find(placedBlock => {
+      if (placedBlock.pos.top === block.pos.top && 
+        placedBlock.pos.left === block.pos.left + block.width) return true;
+    })
+    return neighbour;
   }
 
   #getNextColor(nextBlock: Block) {
