@@ -223,18 +223,32 @@ class Editor {
 
       if (rightNeighbourBlocks.length === 1) {
         const rightBlock = rightNeighbourBlocks[0];
-        if (curBlock.pos.bottom < rightBlock.pos.bottom)
+        if (curBlock.pos.bottom < rightBlock.pos.bottom) 
           height = rightBlock.pos.bottom - curBlock.pos.bottom;
       }
 
-      if (!height) continue;
-      
-      const rightPartitionPos = this.#findNearestRightPartitionPos(curBlock.pos.left + curBlock.width + 1, curBlock.pos.top + curBlock.height);
-      if (rightPartitionPos) {
-        width = rightPartitionPos - curBlock.pos.left - curBlock.width;
+      if (height) {
+        const rightPartitionPos = this.#findNearestRightPartitionPos(curBlock.pos.left + curBlock.width + 1, curBlock.pos.top + curBlock.height);
+        if (rightPartitionPos) 
+          width = rightPartitionPos - curBlock.pos.left - curBlock.width;
       }
-      
-      if (height && width) emptyArea += height * width;
+
+      if (!rightNeighbourBlocks.length) {
+        const rightPartitionPos = this.#findNearestRightPartitionPos(curBlock.pos.left + curBlock.width, curBlock.pos.top + curBlock.height);
+        const endX = curBlock.pos.left + curBlock.width;
+        
+        if (rightPartitionPos) {
+          width = rightPartitionPos - endX;
+          const topPartition = this.#findNearestTopPartition(endX, rightPartitionPos, curBlock.pos.top);
+          if (topPartition) height = curBlock.height;
+        }
+      }
+
+      if (height && width) {
+        console.log(curBlock.initOrder);
+        console.log(height, width)
+        emptyArea += height * width;
+      }
     }
     const areaOfPlacedBlocks = this.#placedBlocks.reduce((sum, block) => sum + block.getArea(), 0);
     const fullness = 1 - (emptyArea / (emptyArea + areaOfPlacedBlocks));
@@ -244,10 +258,25 @@ class Editor {
   #findAllRightNeighbours(curBlock: Block) {
     return this.#placedBlocks.filter(block => {
       if (block.pos.left === curBlock.pos.left + curBlock.width) {
-        if (block.pos.top + block.height > curBlock.pos.top && 
-          block.pos.top + block.height > curBlock.pos.top) return true;
+        if (block.pos.top + block.height > curBlock.pos.top &&
+            block.pos.top <= curBlock.pos.top + curBlock.height
+        ) return true;
       } 
     });
+  }
+
+  #findNearestTopPartition(startX: number, endX: number, endY: number) {
+    const topPartitions =  this.#placedBlocks.filter(block => {
+      if (block.pos.left <= startX && block.pos.left + block.width >= endX)
+        if (block.pos.top < endY) return true;
+    });
+
+    let nearestTopPartition = topPartitions[0];
+    topPartitions.forEach(partition => {
+      if (partition.pos.top > nearestTopPartition.pos.top)
+        nearestTopPartition = partition;
+    })
+    return nearestTopPartition;
   }
 }
 
